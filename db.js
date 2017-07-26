@@ -81,7 +81,7 @@ function deleteUser(id, cb){
     }
     cb(null);
   });
-};
+}
 
 function seed(cb){
   createUser({ name: 'moe', is_manager: true}, function(err){

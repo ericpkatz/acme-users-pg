@@ -1,0 +1,37 @@
+<ul class='list-group'>
+  <li class='list-group-item'>
+    <pre>
+- repo name acme-users-pg
+- deply to heroku
+    </pre>
+    <a href='https://acme-users-pg.herokuapp.com/users' target='_blank'>Working Site</a>
+  </li>
+  <li class='list-group-item'>
+    Files
+    <pre>
+- server.js
+- db.js
+  sync(cb),
+  seed(cb),
+  getUsers(managersOnly, cb)
+  getUser(id, cb)
+  createUser(user, cb)
+  updateUser(user, cb)
+  deleteUser(id, cb)
+  
+- routes/users.js
+  GET '/users'
+  POST '/users'
+  PUT '/users/:id'
+  DELETE '/users/:id'
+  GET '/users/managers'
+
+- views
+  error.html
+  index.html
+  layout.html
+  managers.html
+  users.html
+    </pre>
+  </li>
+</ul>

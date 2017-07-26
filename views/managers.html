@@ -1,0 +1,18 @@
+{% extends './layout.html' %}
+{% block content %}
+  <h2>Managers</h2>
+  <ul class='list-group'>
+    {% for user in managers %}
+      <li class='list-group-item'>
+        {{ user.name }}
+        <form method='POST' action='/users/{{user.id}}?_method=PUT'>
+          <input type='hidden' name='id' value='{{ user.id }}' />
+          <input type='hidden' name='is_manager' value='false' />
+          <button class='btn btn-warning'>
+            Remove as Manager
+          </button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

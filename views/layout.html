@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <link rel='stylesheet' href='/vendor/bootstrap/dist/css/bootstrap.css' />
+  </head>
+  <body>
+    <div class='container'>
+      <h1>Acme Users PG</h1>
+      <ul class='nav nav-tabs'>
+        <li {% if path=='/' %}class='active'{% endif %}>
+          <a href='/'>
+            Home
+          </a>
+        </li>
+        <li {% if path==='/users'%}class='active'{% endif %}>
+          <a href='/users'>
+            Users ({{ users.length }})
+          </a>
+        </li>
+        <li {% if path==='/users/managers'%}class='active'{% endif %}>
+          <a href='/users/managers'>
+            Managers ({{ managers.length }})
+          </a>
+        </li>
+      </ul>
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+</html>

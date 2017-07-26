@@ -1,0 +1,29 @@
+{% extends './layout.html' %}
+{% block content %}
+  <h2>Users</h2>
+  <ul class='list-group'>
+    {% for user in users %}
+      <li class='list-group-item'>
+        {{ user.name }}
+        {% if user.is_manager === false %}
+          <form method='POST' action='/users/{{user.id}}?_method=PUT'>
+            <input type='hidden' name='is_manager' value='true' />
+            <input type='hidden' name='id' value='{{ user.id }}' />
+            <button class='btn btn-primary btn-block'>
+              Make Manager
+            </button>
+          </form>
+          <form method='POST' action='/users/{{user.id}}?_method=DELETE'>
+            <input type='hidden' name='id' value='{{ user.id }}' />
+            <button class='btn btn-danger btn-block'>
+              Delete User
+            </button>
+          </form>
+        {% endif %}
+        {% if user.is_manager === true %}
+        <label class='label label-success'>Manager</label>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

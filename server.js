@@ -17,13 +17,16 @@ app.engine('html', swig.renderFile);
 
 app.use(function(req, res, next){
   res.locals.path = req.url;
-  db.getUsers(false, function(err, users){
-    res.locals.users = users;
-    db.getUsers(true, function(err, managers){
-      res.locals.managers = managers;
-      next();
-    });
-  });
+  Promise.all([
+    db.getUsers(true),
+    db.getUsers(false),
+  ])
+  .then(function(result){
+    res.locals.managers = result[0];
+    res.locals.users = result[1];
+    next();
+  })
+  .catch(next);
 });
 
 app.get('/', function(req, res, next){
@@ -42,26 +45,14 @@ var port = process.env.PORT || 3000;
 
 app.listen(port, function(){
   console.log(`listening on port ${port}`);
-  db.sync(function(err){
-    if(err){
-      return console.log(err.message);
-    }
-    db.seed(function(err){
-      if(err){
-        return console.log(err.message);
-      }
-      db.getUsers(false, function(err, users){
-        if(err){
-          return console.log(err.message);
-        }
-        console.log(users);
-        db.getUsers(true, function(err, users){
-          if(err){
-            return console.log(err.message);
-          }
-          console.log(users);
-        });
-      });
+  db.sync()
+    .then(function(){
+      return db.seed();
+    })
+    .then(function(){
+      return db.getUsers();
+    })
+    .then(function(users){
+      console.log(users);
     });
-  });
 });

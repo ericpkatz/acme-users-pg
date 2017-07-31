@@ -8,11 +8,18 @@ client.connect(function(err){
   }
 });
 
-function query(sql, params,cb){
-  client.query(sql, params, cb);
+function query(sql, params){
+  return new Promise(function(resolve, reject){
+    client.query(sql, params, function(err, result){
+      if(err){
+        return reject(err);
+      }
+      resolve(result);
+    });
+  });
 }
 
-function sync(cb){
+function sync(){
   var sql = `
     DROP TABLE IF EXISTS users;
     CREATE TABLE users(
@@ -22,107 +29,68 @@ function sync(cb){
       CHECK (name <> '')
     );
   `;
-  query(sql, null, function(err){
-    if(err){
-      return cb(err);
-    }
-    cb(null);
-  });
+  return query(sql, null);
 }
 
-function createUser(user, cb){
+function createUser(user){
   user.is_manager = !!user.is_manager;
-  query('insert into users (name, is_manager) values ($1, $2) returning id', [user.name, user.is_manager], function(err, result){
-    if(err){
-      return cb(err);
-    }
-    getUser(result.rows[0].id, function(err, user){
-      if(err){
-        return cb(err);
-      }
-      cb(null, user);
+  console.log(user.is_manager);
+  return query('insert into users (name, is_manager) values ($1, $2) returning id', [user.name, user.is_manager])
+    .then(function(result){
+      return getUser(result.rows[0].id);
     });
-  });
 }
 
-function updateUser(user, cb){
-  getUser(user.id, function(err, _user){
-    if(err){
-      return cb(err);
-    }
-    if(!_user){
-      return cb(new Error('user not found'));
-    }
-    Object.assign(_user, user);
-    var sql = `
-      UPDATE users
-      SET name = $1, is_manager = $2
-      WHERE id = $3
-    `;
-    var params = [ _user.name, _user.is_manager, _user.id];
-    query(sql, params, function(err){
-      if(err){
-        return cb(err);
+function updateUser(user){
+  return getUser(user.id)
+    .then(function(_user){
+      if(!_user){
+        throw new Error('user not found');
       }
-      getUser(_user.id, function(err, user){
-        if(err){
-          return cb(err);
-        }
-        cb(null, user);
-      });
+      Object.assign(_user, user);
+      var sql = `
+        UPDATE users
+        SET name = $1, is_manager = $2
+        WHERE id = $3
+        RETURNING id;
+      `;
+      var params = [ _user.name, _user.is_manager, _user.id];
+      return query(sql, params);
+    })
+    .then(function(result){
+      return getUser(result.rows[0].id);
     });
-  });
 }
 
-function deleteUser(id, cb){
-  query('delete from users where id = $1', [ id ], function(err){
-    if(err){
-      return cb(err);
-    }
-    cb(null);
-  });
+function deleteUser(id){
+  return query('delete from users where id = $1', [ id ]);
 }
 
-function seed(cb){
-  createUser({ name: 'moe', is_manager: true}, function(err){
-    if(err){
-      return cb(err);
-    }
-    createUser({ name: 'larry', is_manager: true}, function(err){
-      if(err){
-        return cb(err);
-      }
-      createUser({ name: 'curly', is_manager: false}, function(err){
-        if(err){
-          return cb(err);
-        }
-      });
-      cb(null);
-    });
-  });
+function seed(){
+  return Promise.all([
+    createUser({ name: 'moe', is_manager: true}),
+    createUser({ name: 'larry', is_manager: true}),
+    createUser({ name: 'curly', is_manager: true}),
+  ]);
 }
 
-function getUsers(onlyManagers, cb){
+function getUsers(onlyManagers){
   var sql = `
     SELECT *
     FROM users
     ${ onlyManagers ? 'WHERE is_manager = true' : ''};
   `;
-  query(sql, null, function(err, result){
-    if(err){
-      return cb(err);
-    }
-    cb(null, result.rows);
-  });
+  return query(sql, null)
+    .then(function(result){
+      return result.rows;
+    });
 }
 
-function getUser(id, cb){
-  query('SELECT * from users where id = $1', [id], function(err, result){
-    if(err){
-      return cb(err);
-    }
-    cb(null, result.rows[0]);
-  });
+function getUser(id){
+  return query('SELECT * from users where id = $1', [id])
+    .then(function(result){
+      return result.rows.length ? result.rows[0] : null;
+    });
 }
 
 
